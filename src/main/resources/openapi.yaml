@@ -1,0 +1,87 @@
+openapi: 3.0.3
+info:
+  title: 5x5 Grid Game API
+  description: OpenAPI specification für das 5x5 Grid-Game.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+paths:
+  /api/game/start:
+    post:
+      summary: Neues Spiel starten
+      responses:
+        '200':
+          description: Spiel erfolgreich gestartet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartGameResponse'
+  /api/game/move:
+    post:
+      summary: Spieler bewegen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoveRequest'
+      responses:
+        '200':
+          description: Erfolgreiche Bewegung (ongoing oder success)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoveResponse'
+        '400':
+          description: Bewegung blockiert
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoveResponse'
+        '409':
+          description: Bewegung außerhalb des Spielfeldes (failed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoveResponse'
+components:
+  schemas:
+    StartGameResponse:
+      type: object
+      properties:
+        gameId:
+          type: string
+        startingPosition:
+          type: string
+        blockedFields:
+          type: array
+          items:
+            type: array
+            items:
+              type: boolean
+      required:
+        - gameId
+        - startingPosition
+        - blockedFields
+    MoveRequest:
+      type: object
+      properties:
+        gameId:
+          type: string
+        direction:
+          type: string
+          enum: [left, right, up, down]
+      required:
+        - gameId
+        - direction
+    MoveResponse:
+      type: object
+      properties:
+        position:
+          type: string
+        status:
+          type: string
+          enum: [ongoing, success, blocked, failed]
+      required:
+        - position
+        - status
