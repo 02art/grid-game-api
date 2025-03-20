@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
-  title: 5x5 Grid Game API
-  description: OpenAPI specification für das 5x5 Grid-Game.
+  title: 5x5 Labyrinth Game API
+  description: Diese API ermöglicht es, ein 5x5-Labyrinth-Spiel zu spielen. Der Spieler startet in A1 und muss das Ziel E5 erreichen.
   version: 1.0.0
 servers:
   - url: http://localhost:8080
@@ -9,6 +9,12 @@ paths:
   /api/game/start:
     post:
       summary: Neues Spiel starten
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartGameRequest'
       responses:
         '200':
           description: Spiel erfolgreich gestartet
@@ -32,20 +38,75 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MoveResponse'
+              examples:
+                ongoing:
+                  summary: Beispiel für einen ongoing Status
+                  value:
+                    position: "B2"
+                    status: "ongoing"
+                success:
+                  summary: Beispiel für einen success Status
+                  value:
+                    position: "E5"
+                    status: "success"
         '400':
           description: Bewegung blockiert
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/MoveResponse'
+              example:
+                position: "B1"
+                status: "blocked"
         '409':
           description: Bewegung außerhalb des Spielfeldes (failed)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/MoveResponse'
+              example:
+                position: "A0"
+                status: "failed"
+  /api/game/{gameId}:
+    get:
+      summary: Hole den Status eines Spiels
+      parameters:
+        - in: path
+          name: gameId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Spielstatus gefunden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameRecord'
+        '404':
+          description: Kein Eintrag gefunden
+    delete:
+      summary: Lösche einen Spieleintrag
+      parameters:
+        - in: path
+          name: gameId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Spieleintrag gelöscht
+        '404':
+          description: Kein Eintrag gefunden
 components:
   schemas:
+    StartGameRequest:
+      type: object
+      properties:
+        playerName:
+          type: string
+      required:
+        - playerName
     StartGameResponse:
       type: object
       properties:
@@ -53,16 +114,9 @@ components:
           type: string
         startingPosition:
           type: string
-        blockedFields:
-          type: array
-          items:
-            type: array
-            items:
-              type: boolean
       required:
         - gameId
         - startingPosition
-        - blockedFields
     MoveRequest:
       type: object
       properties:
@@ -84,4 +138,17 @@ components:
           enum: [ongoing, success, blocked, failed]
       required:
         - position
+        - status
+    GameRecord:
+      type: object
+      properties:
+        gameId:
+          type: string
+        playerName:
+          type: string
+        status:
+          type: string
+      required:
+        - gameId
+        - playerName
         - status
